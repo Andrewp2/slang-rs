@@ -1,4 +1,5 @@
 use std::fs;
+
 use bindgen::Formatter;
 
 fn generate_bindings() {
@@ -38,19 +39,31 @@ fn main() {
             .define("SLANG_LIB_TYPE", "STATIC")
             .build();
 
-        println!("cargo:rustc-link-lib=static={:?}", path.join("lib").join("slang.lib"));
+        // println!("cargo:rustc-link-lib=static={:?}", path.join("lib").join("slang.lib"));
+        // Add the directory containing the library to the linker search path
+        println!(
+            "cargo:rustc-link-search=native={}",
+            path.join("lib").display()
+        );
+        // Specify the name of the library to link against
+        println!("cargo:rustc-link-lib=static=slang");
     }
 
     #[cfg(not(feature = "static"))]
     {
         #[cfg(any(target_os = "windows"))]
         {
-            use std::env;
-            use std::path::PathBuf;
+            use std::{env, path::PathBuf};
 
             let slang_dir = env::var("SLANG_DIR").map(PathBuf::from).expect("Please provide an environment variable `SLANG_DIR` that points to your slang installation.");
-            println!("cargo:rustc-link-search=native={}", slang_dir.join("bin").display());
-            println!("cargo:rustc-link-search=native={}", slang_dir.join("lib").display());
+            println!(
+                "cargo:rustc-link-search=native={}",
+                slang_dir.join("bin").display()
+            );
+            println!(
+                "cargo:rustc-link-search=native={}",
+                slang_dir.join("lib").display()
+            );
 
             println!("cargo:rustc-link-lib=static=slang");
         }
@@ -60,6 +73,4 @@ fn main() {
         #[cfg(target_os = "macos")]
         println!("cargo:rustc-link-lib=dylib=slang");
     }
-
-
 }
