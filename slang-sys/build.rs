@@ -47,6 +47,20 @@ fn main() {
         );
         // Specify the name of the library to link against
         println!("cargo:rustc-link-lib=static=slang");
+        let cpp_lib = if cfg!(target_os = "macos") {
+            "c++"
+        } else if cfg!(target_os = "windows") {
+            "msvcrt"
+        } else {
+            "stdc++"
+        };
+        println!("cargo:rustc-link-lib={}", cpp_lib);
+        // Link additional libraries if necessary (e.g., `dl` and `pthread` on Linux)
+        #[cfg(target_os = "linux")]
+        {
+            println!("cargo:rustc-link-lib=dylib=dl");
+            println!("cargo:rustc-link-lib=dylib=pthread");
+        }
     }
 
     #[cfg(not(feature = "static"))]
